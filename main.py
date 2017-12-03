@@ -11,15 +11,17 @@ url ='https://www.dropbox.com/sh/euppz607r6gsen2/AAAQCu8KjT7Ii1R60W2-Bm1Ua/Movie
 zipFileName = 'MovieLens (Movie Ratings).zip'
 subzipFileName ='movielens100k/ml-100k'
 userDataSet = 'u.data'
+userTestDataSet = 'u1.test'
 destPath = os.getcwd()
 DropboxAPI.fetchData(url, zipFileName, destPath)
 filePath = join(destPath, zipFileName.rsplit(".", 1)[0])
 filePath = join(filePath,subzipFileName.rsplit(".", 1)[0])
-fullFilePath = join(filePath,userDataSet)
+#fullFilePath = join(filePath,userDataSet)
 
 #Importing the Dataset
 names = ['user_id', 'item_id', 'rating', 'timestamp']
-df = pd.read_csv(fullFilePath, sep='\t', names=names)
+df = pd.read_csv(join(filePath,userDataSet), sep='\t', names=names)
+df_test = pd.read_csv(join(filePath,userTestDataSet), sep='\t', names=names)
 
 #Calculating Number of Unique Users and Unique Movies
 n_users = df.user_id.unique().shape[0]
@@ -27,8 +29,11 @@ n_items = df.item_id.unique().shape[0]
 
 #Creating a Ratings Matrix with size (n_users X n_items)
 ratings = np.zeros((n_users, n_items))
-for row in df.itertuples():
-    ratings[row[1]-1, row[2]-1] = row[3]
+for col in df.itertuples():
+    ratings[col.user_id-1, col.item_id-1] = col.rating
+ratings_test = np.zeros((n_users, n_items))
+for col in df_test.itertuples():
+    ratings_test[col.user_id-1, col.item_id-1] = col.rating
 
 #Calculating minumum number of movies rated by each user
 nonzero_counts = np.count_nonzero(ratings, axis=1)
@@ -39,3 +44,6 @@ sparsity = float(len(ratings.nonzero()[0]))
 sparsity /= (ratings.shape[0] * ratings.shape[1])
 sparsity *= 100
 print('Sparsity of ratings matrix : ', sparsity)
+
+from sklearn.metrics.pairwise import pairwise_distances
+user_similarity = pairwise_distances(ratings, metric='cosine')
