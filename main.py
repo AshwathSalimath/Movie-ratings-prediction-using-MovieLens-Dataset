@@ -2,10 +2,24 @@
 #Importing the Libraries
 import numpy as np
 import pandas as pd
+from os.path import join
+import os
+import DropboxAPI
+
+#Fetching DataSet from DropBox  and Unzipping the File
+url ='https://www.dropbox.com/sh/euppz607r6gsen2/AAAQCu8KjT7Ii1R60W2-Bm1Ua/MovieLens%20(Movie%20Ratings)?dl=1'
+zipFileName = 'MovieLens (Movie Ratings).zip'
+subzipFileName ='movielens100k/ml-100k'
+userDataSet = 'u.data'
+destPath = os.getcwd()
+DropboxAPI.fetchData(url, zipFileName, destPath)
+filePath = join(destPath, zipFileName.rsplit(".", 1)[0])
+filePath = join(filePath,subzipFileName.rsplit(".", 1)[0])
+fullFilePath = join(filePath,userDataSet)
 
 #Importing the Dataset
 names = ['user_id', 'item_id', 'rating', 'timestamp']
-df = pd.read_csv('u.data', sep='\t', names=names)
+df = pd.read_csv(fullFilePath, sep='\t', names=names)
 
 #Calculating Number of Unique Users and Unique Movies
 n_users = df.user_id.unique().shape[0]
