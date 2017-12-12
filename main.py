@@ -45,5 +45,4 @@ sparsity /= (ratings.shape[0] * ratings.shape[1])
 sparsity *= 100
 print('Sparsity of ratings matrix : ', sparsity)
 
-from sklearn.metrics.pairwise import pairwise_distances
-user_similarity = pairwise_distances(ratings, metric='cosine')
+
