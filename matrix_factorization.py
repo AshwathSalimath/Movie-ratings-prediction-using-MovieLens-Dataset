@@ -21,7 +21,7 @@ filePath = join(filePath,subzipFileName.rsplit(".", 1)[0])
 #Importing the Dataset
 names = ['user_id', 'item_id', 'rating', 'timestamp']
 df = pd.read_csv(join(filePath,userDataSet), sep='\t', names=names)
-df_test = pd.read_csv(join(filePath,userTestDataSet), sep='\t', names=names)
+
 
 #Calculating Number of Unique Users and Unique Movies
 n_users = df.user_id.unique().shape[0]
