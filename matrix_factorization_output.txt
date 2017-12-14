@@ -1,0 +1,41 @@
+
+ratings shape (943, 1682)
+Iteration: 50
+	current iteration: 10
+	current iteration: 20
+	current iteration: 30
+	current iteration: 40
+	current iteration: 50
+predictions_all shape (943, 1682)
+Train mse: 13.72704
+Train rmse: 3.705002024290945
+Test mse: 14.1564156946
+Test rmse: 3.762501255095037
+sample_row [  0   0   0 ..., 942 942 942]
+sample_col [   0    1    2 ..., 1187 1227 1329]
+Iteration: 200
+	current iteration: 10
+	current iteration: 20
+	current iteration: 30
+	current iteration: 40
+	current iteration: 50
+	current iteration: 60
+	current iteration: 70
+	current iteration: 80
+	current iteration: 90
+	current iteration: 100
+	current iteration: 110
+	current iteration: 120
+	current iteration: 130
+	current iteration: 140
+	current iteration: 150
+	current iteration: 160
+	current iteration: 170
+	current iteration: 180
+	current iteration: 190
+	current iteration: 200
+predictions_all shape (943, 1682)
+Train mse: 0.910364035893
+Train rmse: 0.954129988991338
+Test mse: 1.01535506623
+Test rmse: 1.0076482849830872
