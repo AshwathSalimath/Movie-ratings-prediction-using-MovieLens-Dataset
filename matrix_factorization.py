@@ -27,7 +27,6 @@ df = pd.read_csv(join(filePath,userDataSet), sep='\t', names=names)
 n_users = df.user_id.unique().shape[0]
 n_items = df.item_id.unique().shape[0]
 
-
 # Create r_{ui}, our ratings matrix
 ratings = np.zeros((n_users, n_items))
 for row in df.itertuples():
@@ -129,10 +128,8 @@ class ExplicitMF():
         self.learning = learning
         if self.learning == 'sgd':
             self.sample_row, self.sample_col = self.ratings.nonzero()
-            print
-            'sample_row', self.sample_row
-            print
-            'sample_col', self.sample_col
+            print('sample_row', self.sample_row)
+            print('sample_col', self.sample_col)
             self.n_samples = len(self.sample_row)
         self._v = verbose
 
@@ -191,8 +188,7 @@ class ExplicitMF():
         ctr = 1
         while ctr <= n_iter:
             if ctr % 10 == 0 and self._v:
-                print
-                '\tcurrent iteration: {:d}'.format(ctr)
+                print('\tcurrent iteration: {:d}'.format(ctr))
             if self.learning == 'als':
                 self.user_vecs = self.als_step(self.user_vecs,
                                                self.item_vecs,
@@ -292,14 +288,10 @@ class ExplicitMF():
             self.test_mse += [get_mse(predictions, test)]
             self.test_rmse += [get_rmse(predictions, test)]
             if self._v:
-                print
-                'train mse: ' + str(self.train_mse[-1])
-                print
-                'Train rmse: ' + str(self.train_rmse[-1])
-                print
-                'Text mse: ' + str(self.test_mse[-1])
-                print
-                'Test rmse: ' + str(self.test_rmse[-1])
+                print('Train mse: ' + str(self.train_mse[-1]))
+                print('Train rmse: ' + str(self.train_rmse[-1]))
+                print('Test mse: ' + str(self.test_mse[-1]))
+                print('Test rmse: ' + str(self.test_rmse[-1]))
             iter_diff = n_iter
 
 
@@ -327,11 +319,46 @@ def plot_learning_curve(iter_array, model):
     plt.legend(loc='best', fontsize=20);
 
 
+"""              
+#plot_learning_curve(iter_array, MF_ALS)
+iter_array = [1, 2, 5, 10, 25, 50, 100, 200]
+latent_factors = [5, 10, 20, 40, 80]
+regularizations = [0.001, 0.01, 0.1, 1.]
+regularizations.sort()
+best_params = {}
+best_params['n_factors'] = latent_factors[0]
+best_params['reg'] = regularizations[0]
+best_params['n_iter'] = 0
+best_params['train_mse'] = np.inf
+best_params['test_mse'] = np.inf
+best_params['model'] = None
+for fact in latent_factors:
+    print 'Factors: {}'.format(fact)
+    for reg in regularizations:
+        print 'Regularization: {}'.format(reg)
+        MF_SGD = ExplicitMF(train, n_factors=fact, learning='sgd',\
+                            user_fact_reg=reg, item_fact_reg=reg, \
+                            user_bias_reg=reg, item_bias_reg=reg)
+        MF_SGD.calculate_learning_curve(iter_array, test, learning_rate=0.001)
+        min_idx = np.argmin(MF_SGD.test_mse)
+        if MF_SGD.test_mse[min_idx] < best_params['test_mse']:
+            best_params['n_factors'] = fact
+            best_params['reg'] = reg
+            best_params['n_iter'] = iter_array[min_idx]
+            best_params['train_mse'] = MF_SGD.train_mse[min_idx]
+            best_params['test_mse'] = MF_SGD.test_mse[min_idx]
+            best_params['model'] = MF_SGD
+            print 'New optimal hyperparameters'
+            print pd.Series(best_params)
+plot_learning_curve(iter_array, best_params['model'])
+print 'Best regularization: {}'.format(best_params['reg'])
+print 'Best latent factors: {}'.format(best_params['n_factors'])
+print 'Best iterations: {}'.format(best_params['n_iter'])"""
+
 best_als_model = ExplicitMF(ratings, n_factors=20, learning='als', \
                             item_fact_reg=0.01, user_fact_reg=0.01, verbose=True)
 
 iter_array = [50]
-
 best_als_model.calculate_learning_curve(iter_array, test)
 
 best_sgd_model = ExplicitMF(train, n_factors=80, learning='sgd', \
@@ -341,3 +368,108 @@ best_sgd_model = ExplicitMF(train, n_factors=80, learning='sgd', \
 iter_array = [200]
 best_sgd_model.calculate_learning_curve(iter_array, test)
 
+"""
+def cosine_similarity(model):
+    sim = model.item_vecs.dot(model.item_vecs.T)
+    norms = np.array([np.sqrt(np.diagonal(sim))])
+    return sim / norms / norms.T
+als_sim = cosine_similarity(best_als_model)
+sgd_sim = cosine_similarity(best_sgd_model)
+# Load in movie data
+idx_to_movie = {}
+with open('ml-100k/u.item', 'r') as f:
+    for line in f.readlines():
+        info = line.split('|')
+        idx_to_movie[int(info[0])-1] = info[4]
+# Build function to query themoviedb.org's API
+import requests
+import json
+# Get base url filepath structure. w185 corresponds to size of movie poster.
+api_key = '0f1e88eacf0ad51529b6557515c266fe'
+headers = {'Accept': 'application/json'}
+payload = {'api_key': api_key} 
+response = requests.get("http://api.themoviedb.org/3/configuration",\
+                        params=payload,\
+                        headers=headers)
+response = json.loads(response.text)
+base_url = response['images']['base_url'] + 'w185'
+def get_poster(imdb_url, base_url, api_key):
+    #get IMDB movie ID
+    response = requests.get(imdb_url)
+    movie_id = response.url.split('/')[-2]
+
+    #query themoviedb.org API for movie poster path
+    movie_url = 'http://api.themoviedb.org/3/movie/{:}/images'.format(movie_id)
+    headers = {'Accept': 'application/json'}
+    payload = {'api_key': api_key} 
+    response = requests.get(movie_url, params=payload, headers=headers)
+    try:
+        file_path = json.loads(response.text)['posters'][0]['file_path']
+    except:
+        # IMDB movie ID is sometimes no good. Need to get correct one.
+        movie_title = imdb_url.split('?')[-1].split('(')[0]
+        payload['query'] = movie_title
+        response = requests.get('http://api.themoviedb.org/3/search/movie',\
+                                params=payload,\
+                                headers=headers)
+        try:
+            movie_id = json.loads(response.text)['results'][0]['id']
+            payload.pop('query', None)
+            movie_url = 'http://api.themoviedb.org/3/movie/{:}/images'\
+                        .format(movie_id)
+            response = requests.get(movie_url, params=payload, headers=headers)
+            file_path = json.loads(response.text)['posters'][0]['file_path']
+        except:
+            # Sometimes the url just doesn't work.
+            # Return '' so that it does not mess up Image()
+            return ''
+
+    return base_url + file_path
+from IPython.display import HTML
+from IPython.display import display
+def display_top_k_movies(similarity, mapper, movie_idx, base_url, api_key, k=5):
+    movie_indices = np.argsort(similarity[movie_idx, :])[::-1]
+    images = ''
+    k_ctr = 0
+    #start i at 1 to not grab the input movie
+    i = 1
+    while k_ctr < k:
+        movie = mapper[movie_indices[i]]
+        poster = get_poster(movie, base_url, api_key)
+        if poster != '':
+            images += "<img style='width: 120px; margin: 0px; \
+                      float: left; border: 1px solid black;' src='%s' />"\
+                      % poster
+            k_ctr += 1
+        i += 1
+    display(HTML(images))
+def compare_recs(als_similarity, sgd_similarity, mapper, 
+                 movie_idx, base_url, api_key, k=5):
+    #display input
+    display(HTML('<font size=5>'+'Input'+'</font>'))
+    input_poster = get_poster(mapper[movie_idx], base_url, api_key)
+    input_image = "<img style='width: 120px; margin: 0px; \
+                      float: left; border: 1px solid black;' src='%s' />" \
+                  % input_poster
+    display(HTML(input_image))
+    # Display ALS Recs
+    display(HTML('<font size=5>'+'ALS Recs'+'</font>'))
+    display_top_k_movies(als_similarity, idx_to_movie,\
+                         movie_idx, base_url, api_key)
+    # Display SGD Recs
+    display(HTML('<font size=5>'+'SGD Recs'+'</font>'))
+    display_top_k_movies(sgd_similarity, idx_to_movie,\
+                         movie_idx, base_url, api_key)
+
+idx = 0 # Toy Story
+compare_recs(als_sim, sgd_sim, idx_to_movie, idx, base_url, api_key)
+idx = 1 # GoldenEye
+compare_recs(als_sim, sgd_sim, idx_to_movie, idx, base_url, api_key)
+idx = 20 # Muppet Treasure Island
+compare_recs(als_sim, sgd_sim, idx_to_movie, idx, base_url, api_key)
+
+idx = 40 # Billy Madison
+compare_recs(als_sim, sgd_sim, idx_to_movie, idx, base_url, api_key)
+idx = 500 # Dumbo
+compare_recs(als_sim, sgd_sim, idx_to_movie, idx, base_url, api_key)
+"""

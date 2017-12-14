@@ -107,9 +107,9 @@ for testcase in testset:
         print('Test has finished : '+str(n/100)+'%' )
     error1=findKNNuser(copy.deepcopy(fdata), testcase)
     #print('KNN User-based RMSE: ', error1)
-    #error2=findKNNitem(copy.deepcopy(fdata), testcase)
+    error2=findKNNitem(copy.deepcopy(fdata), testcase)
     #print('KNN Item-based RMSE: ', error2)
-    errorlist.append((error1/2)**2)
+    errorlist.append((error1/2+error2/2)**2)
     n+=1
 print('test finished')
 meanserror=np.average(errorlist)
