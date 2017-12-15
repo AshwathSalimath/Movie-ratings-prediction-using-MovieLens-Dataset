@@ -98,6 +98,27 @@ def findKNNuser(indata,item):
 errorlist=[]
 print('start test '+str(len(testset)))
 n=1
+
+for testcase in testset:
+    if n % 100==0:
+        print('Test has finished : '+str(n/100)+'%' )
+    error1=findKNNuser(copy.deepcopy(fdata), testcase)
+    errorlist.append((error1)**2)
+    n+=1
+print('User-based KNN - Test finished')
+meanserror=np.average(errorlist)
+print('User-based MSE: ', meanserror)
+
+for testcase in testset:
+    if n % 100==0:
+        print('Test has finished : '+str(n/100)+'%' )
+    error2=findKNNitem(copy.deepcopy(fdata), testcase)
+    errorlist.append((error2)**2)
+    n+=1
+print('test finished')
+meanserror=np.average(errorlist)
+print('Item-based MSE: ', meanserror)
+
 for testcase in testset:
     if n % 100==0:
         print('Test has finished : '+str(n/100)+'%' )
@@ -107,5 +128,4 @@ for testcase in testset:
     n+=1
 print('test finished')
 meanserror=np.average(errorlist)
-print(meanserror)
-
+print('Mixed User-Item based: ',meanserror)
